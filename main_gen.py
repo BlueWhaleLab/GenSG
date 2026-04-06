@@ -74,6 +74,7 @@ class Evaluator:
             "model": self.model_name,
             "messages": messages,
             "reasoning": {"effort": "high"},
+            # "quantizations": ["fp8"]
         }
     
         if self.args.provider:
@@ -83,6 +84,7 @@ class Evaluator:
             url="https://openrouter.ai/api/v1/chat/completions",
             headers=self.headers,
             json=payload,
+            timeout=(30, 600),
         )
         
     def _parse_actions(self, raw: str) -> list:
@@ -115,12 +117,24 @@ class Evaluator:
 
                 original_answer = message["content"]
                 reasoning_content = message.get("reasoning", "")
+                
+                if data["choices"][0]["finish_reason"] == "length":
+                    return original_answer, reasoning_content, [], usage
+                    
                 action_sequence_list = self._parse_actions(original_answer)
 
                 return original_answer, reasoning_content, action_sequence_list, usage
-
+            
+            except requests.exceptions.Timeout:
+                print(f"[Attempt {attempt + 1}] Request timed out. Retrying...")
             except requests.exceptions.HTTPError as e:
-                print(f"[Attempt {attempt + 1}] HTTP {e.response.status_code}. Retrying...")
+                status = e.response.status_code
+                if status == 429:
+                    wait = min(30 * (attempt + 1), 120)
+                    print(f"[Attempt {attempt + 1}] Rate limited. Waiting {wait}s...")
+                    time.sleep(wait)
+                    continue
+                print(f"[Attempt {attempt + 1}] HTTP {status}. Retrying...")
             except Exception as e:
                 print(f"[Attempt {attempt + 1}] Error: {e}. Retrying...")
 
@@ -139,12 +153,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Evaluation parameters
     parser.add_argument("--test_data", type=str, default="data/test.json")
-    parser.add_argument("--model_name", type=str, default="minimax/minimax-m2.7", help="The name of the model to evaluate.")
+    parser.add_argument("--model_name", type=str, default="deepseek/deepseek-v3.2", help="The name of the model to evaluate.")
     parser.add_argument("--provider", type=str, default="", help="The provider of the model (e.g., openai, azure). Leave empty to allow all providers.")
     parser.add_argument("--start", type=int, default=0, help="The starting index of the levels to evaluate.")
     parser.add_argument("--end", type=int, default=100, help="The ending index of the levels to evaluate.")
     
-    parser.add_argument("--concurrency", type=int, default=5, help="Number of concurrent API requests.")
+    parser.add_argument("--concurrency", type=int, default=1, help="Number of concurrent API requests.")
     parser.add_argument("--max_retries", type=int, default=3, help="Maximum number of retries for API calls.")
     
     

@@ -19,7 +19,7 @@ class Evaluator:
         self.concurrency = args.concurrency
         
         self.headers = {"Authorization": f"Bearer {os.environ.get('OPENROUTER_API_KEY')}"}
-        self.data = self.load_data(args.level_data)
+        self.data = self.load_data(args.test_data)
         
     def process_single_instance(self, level):
         """Handle single instance"""
@@ -61,6 +61,7 @@ class Evaluator:
             "model": self.model_name,
             "messages": messages,
             "reasoning": {"effort": "high"},
+            # "quantizations": ["fp8"]
         }
     
         if self.args.provider:
@@ -70,6 +71,7 @@ class Evaluator:
             url="https://openrouter.ai/api/v1/chat/completions",
             headers=self.headers,
             json=payload,
+            timeout=(30, 600),
         )
         
     def send_requests(self, messages: list) -> tuple[str, str, dict]:
@@ -96,8 +98,16 @@ class Evaluator:
                     
                 return original_answer, reasoning_content, usage
 
+            except requests.exceptions.Timeout:
+                print(f"[Attempt {attempt + 1}] Request timed out. Retrying...")
             except requests.exceptions.HTTPError as e:
-                print(f"[Attempt {attempt + 1}] HTTP {e.response.status_code}. Retrying...")
+                status = e.response.status_code
+                if status == 429:
+                    wait = min(30 * (attempt + 1), 120)
+                    print(f"[Attempt {attempt + 1}] Rate limited. Waiting {wait}s...")
+                    time.sleep(wait)
+                    continue
+                print(f"[Attempt {attempt + 1}] HTTP {status}. Retrying...")
             except Exception as e:
                 print(f"[Attempt {attempt + 1}] Error: {e}. Retrying...")
 
@@ -127,13 +137,13 @@ class Evaluator:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Evaluation parameters
-    parser.add_argument("--level_data", type=str, default="data/test.json")
-    parser.add_argument("--model_name", type=str, default="openai/gpt-5.4", help="The name of the model to evaluate.")
+    parser.add_argument("--test_data", type=str, default="data/test.json")
+    parser.add_argument("--model_name", type=str, default="qwen/qwen3.6-plus:free", help="The name of the model to evaluate.")
     parser.add_argument("--provider", type=str, default="", help="The provider of the model (e.g., openai, azure).")
     parser.add_argument("--start", type=int, default=0, help="The starting index of the levels to evaluate.")
     parser.add_argument("--end", type=int, default=100, help="The ending index of the levels to evaluate.")
     
-    parser.add_argument("--concurrency", type=int, default=5, help="Number of concurrent API requests.")
+    parser.add_argument("--concurrency", type=int, default=1, help="Number of concurrent API requests.")
     parser.add_argument("--max_retries", type=int, default=3, help="Maximum number of retries for API calls.")
     
     args = parser.parse_args()
