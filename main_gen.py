@@ -180,10 +180,4 @@ if __name__ == "__main__":
     
     print(result_summary)
     
-    # google/gemini-3.1-pro-preview
-    # openai/gpt-5.4
-    # x-ai/grok-4.20
-    # novita/fp8  deepseek/deepseek-v3.2
-    # minimax/fp8   minimax/minimax-m2.7
-    # qwen/qwen3.6-plus:free
     

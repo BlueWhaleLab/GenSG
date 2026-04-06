@@ -12,7 +12,7 @@
 </p>
 
 
-GenSG is a prototype benchmark for evaluating the systematic generalization (SG) capabilities of large language models (LLMs) from the generative perspective. Unlike most existing SG benchmarks that adopt a discriminative paradigm — where models parse or verify pre-constructed combinations of atomic elements — GenSG requires models to autonomously construct action sequences to achieve a high-level goal from atomic components. This generative formulation forces models to navigate an exponentially larger compositional search space ($O(N^{L_{max}})$), better reflecting real-world problem solving. 
+GenSG is a prototype benchmark for evaluating the systematic generalization (SG) capabilities of large language models (LLMs) from the generative perspective. Unlike most existing SG benchmarks that adopt a discriminative paradigm — where models parse or verify pre-constructed combinations of atomic elements — GenSG requires models to autonomously construct action sequences to achieve a high-level goal from atomic components. This generative formulation forces models to navigate an exponentially larger compositional search space ($O(N^{L_{max}})$), better reflecting real-world problem solving. The current prototype includes a resource scarcity setting as one illustrative test of systematicity; please refer to our paper for details.
 
 Our results reveal a striking gap: **for the same model, switching from discriminative to generative evaluation causes accuracy to drop by 2–5×**(e.g., Gemini 3.1 Pro: 92% → 52%, GPT 5.4: 78% → 23%, DeepSeek V3.2: 53% → 6%), while **average output length increases by 2–4×** (e.g., GPT 5.4: 5,521 → 23,117 tokens), demonstrating that the generative task is substantially harder and demands far greater reasoning effort.
 
@@ -67,7 +67,7 @@ Output is saved to `Result_{model_name}_{start}_{end}.json`.
 
 ### Discriminative Task
 
-Evaluate how well a model infers the original goal from an given action sequence:
+Evaluate how well a model infers the original goal from a given action sequence:
 
 ```bash
 python main_dis.py \
@@ -92,6 +92,7 @@ Output is saved to `Discriminative_Results_{model_name}_{start}_{end}.json`.
 | `--max_retries` | `3` | Retry limit per failed request |
 
 ## Results
+We evaluate six state-of-the-art LLMs, including both proprietary and open-source models, on the generative and discriminative tasks. The results reveal a significant performance gap: **on the same data, switching from discriminative to generative evaluation causes accuracy to drop by 2–5×** (e.g., Gemini 3.1 Pro: 92% → 52%, GPT 5.4: 78% → 23%, DeepSeek V3.2: 53% → 6%), while **average output length increases by 2–4×** (e.g., GPT 5.4: 5,521 → 23,117 tokens, Grok 4.20: 11,497 → 28,078 tokens). This confirms that generative evaluation is substantially more challenging, requiring models to actively search through a vast compositional space rather than simply verifying predefined combinations.
 
 | Model | Generative Accuracy | Generative Avg. Output Length | Discriminative Accuracy | Discriminative Avg. Output Length |
 |---|---|---|---|---|
@@ -104,19 +105,15 @@ Output is saved to `Discriminative_Results_{model_name}_{start}_{end}.json`.
 
 † Results unavailable due to exceeding the model's maximum output length.
 
-
-We evaluate six state-of-the-art LLMs, including both proprietary and open-source models, on the generative and discriminative tasks. The results reveal a significant performance gap: **on the same data, switching from discriminative to generative evaluation causes accuracy to drop by 2–5×** (e.g., Gemini 3.1 Pro: 92% → 52%, GPT 5.4: 78% → 23%, DeepSeek V3.2: 53% → 6%), while **average output length increases by 2–4×** (e.g., GPT 5.4: 5,521 → 23,117 tokens, Grok 4.20: 11,497 → 28,078 tokens). This confirms that generative evaluation is substantially more challenging, requiring models to actively search through a vast compositional space rather than simply verifying predefined combinations.
-
 ## Citation
 
 <!-- TODO: Add citation -->
 
 ```bibtex
-@article{gensg2025,
+@article{gensg2026,
   title   = {},
   author  = {},
   journal = {},
-  year    = {}
+  year    = {2026}
 }
 ```
-qwen/qwen3.6-plus-preview
